@@ -25,30 +25,49 @@ def analyze_property():
         if response.status_code != 200:
             return jsonify({'error': 'Failed to fetch the page.'}), 500
 
-        soup = BeautifulSoup(response.text, 'html.parser')  # ✅ الإصلاح هنا
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-        # استخراج عنوان الإعلان
+        # استخراج العنوان
         title = soup.find('h1').text.strip() if soup.find('h1') else 'Not found'
 
-        # استخراج السعر
-        price_text = soup.find(text=re.compile(r'(AED|QAR|USD|ر\.ق|د\.إ|\$)'))
-        price_value = re.sub(r'[^\d.]', '', price_text) if price_text else '0'
-        price = float(price_value) if price_value else 0
+        # السعر
+        price = 0.0
+        price_element = soup.find(text=re.compile(r'(AED|QAR|USD|ر\.ق|د\.إ|\$)'))
+        if price_element:
+            match = re.search(r'([\d,\.]+)', price_element)
+            if match:
+                try:
+                    raw_price = match.group(1).replace(',', '')
+                    price = float(raw_price)
+                except:
+                    price = 0.0
 
-        # استخراج المساحة
-        area_text = soup.find(text=re.compile(r'(sqft|م²|قدم)'))
-        area_value = re.findall(r'\d+', area_text) if area_text else ['1']
-        area = float(area_value[0]) if area_value else 1
+        # المساحة
+        area = 1.0
+        area_element = soup.find(text=re.compile(r'(sqft|م²|قدم)'))
+        if area_element:
+            match = re.search(r'([\d,\.]+)', area_element)
+            if match:
+                try:
+                    raw_area = match.group(1).replace(',', '')
+                    area = float(raw_area)
+                except:
+                    area = 1.0
 
-        # حساب السعر لكل متر مربع
+        # سعر المتر المربع
         price_per_m2 = round(price / area, 2) if area > 0 else 0
-        evaluation = "سعر جيد / Good price 👍" if price_per_m2 < 9000 else (
-                     "سعر معقول / Moderate price 🟡" if price_per_m2 < 15000 else
-                     "سعر مرتفع / High price 🔴")
+
+        # التقييم الذكي
+        if price_per_m2 < 9000:
+            evaluation = "سعر جيد / Good price 👍"
+        elif price_per_m2 < 15000:
+            evaluation = "سعر معقول / Moderate price 🟡"
+        else:
+            evaluation = "سعر مرتفع / High price 🔴"
 
         return jsonify({
             'title': title,
-            'price': price_text.strip() if price_text else 'Not found',
+            'price': f"{price} QAR",
             'area': area,
             'price_per_m2': price_per_m2,
             'evaluation': evaluation,
@@ -59,4 +78,4 @@ def analyze_property():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
