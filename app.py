@@ -25,7 +25,8 @@ def analyze_property():
         if response.status_code != 200:
             return jsonify({'error': 'Failed to fetch the page.'}), 500
 
-        soup = BeautifulSoup(response.text, 'parser')
+        soup = BeautifulSoup(response.text, 'html.parser')
+
         title = soup.find('h1').text.strip() if soup.find('h1') else 'Not found'
 
         price_text = soup.find(text=re.compile(r'(AED|QAR|USD|ر\.ق|د\.إ|\$)'))
