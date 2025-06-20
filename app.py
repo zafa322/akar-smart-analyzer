@@ -25,18 +25,22 @@ def analyze_property():
         if response.status_code != 200:
             return jsonify({'error': 'Failed to fetch the page.'}), 500
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, 'html.parser')  # ✅ الإصلاح هنا
 
+        # استخراج عنوان الإعلان
         title = soup.find('h1').text.strip() if soup.find('h1') else 'Not found'
 
+        # استخراج السعر
         price_text = soup.find(text=re.compile(r'(AED|QAR|USD|ر\.ق|د\.إ|\$)'))
         price_value = re.sub(r'[^\d.]', '', price_text) if price_text else '0'
         price = float(price_value) if price_value else 0
 
+        # استخراج المساحة
         area_text = soup.find(text=re.compile(r'(sqft|م²|قدم)'))
         area_value = re.findall(r'\d+', area_text) if area_text else ['1']
         area = float(area_value[0]) if area_value else 1
 
+        # حساب السعر لكل متر مربع
         price_per_m2 = round(price / area, 2) if area > 0 else 0
         evaluation = "سعر جيد / Good price 👍" if price_per_m2 < 9000 else (
                      "سعر معقول / Moderate price 🟡" if price_per_m2 < 15000 else
