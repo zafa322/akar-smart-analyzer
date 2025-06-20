@@ -1,30 +1,88 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>فاحص العقارات الذكي</title>
+  <meta charset="UTF-8">
+  <title>فاحص العقارات الذكي</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 2rem;
+      color: #222;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background: #007BFF;
+      color: white;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 2rem;
+      text-align: right;
+      background: #f0f0f0;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 <body>
-    <h2>تحليل العقار</h2>
-    <form id="analyzeForm">
-        <input type="text" id="urlInput" placeholder="ضع رابط العقار هنا" style="width:300px;">
-        <button type="submit">تحليل</button>
-    </form>
-    <pre id="result"></pre>
-    <script>
-        document.getElementById('analyzeForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const url = document.getElementById('urlInput').value;
-            fetch('/api/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
-            });
-        });
-    </script>
+  <div class="container">
+    <h1>🔍 فاحص العقارات الذكي</h1>
+    <p>أدخل رابط عقار من Bayut أو PropertyFinder للحصول على تقييم ذكي.</p>
+    <input id="urlInput" type="text" placeholder="الصق رابط العقار هنا...">
+    <button onclick="analyze()">تحليل</button>
+
+    <div id="output" class="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    async function analyze() {
+      const url = document.getElementById('urlInput').value;
+      const output = document.getElementById('output');
+      output.innerHTML = 'جاري التحليل...';
+      output.style.display = 'block';
+
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ url })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        output.innerHTML = "❌ خطأ: " + result.error;
+      } else {
+        output.innerHTML = `
+          <strong>العنوان:</strong> ${result.title}<br>
+          <strong>السعر:</strong> ${result.price}<br>
+          <strong>المساحة:</strong> ${result.area} م²<br>
+          <strong>سعر المتر:</strong> ${result.price_per_m2} <br>
+          <strong>تقييم:</strong> ${result.evaluation}
+        `;
+      }
+    }
+  </script>
 </body>
 </html>
