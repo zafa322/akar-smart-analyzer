@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>فاحص العقارات الذكي</title>
+</head>
+<body>
+    <h2>تحليل العقار</h2>
+    <form id="analyzeForm">
+        <input type="text" id="urlInput" placeholder="ضع رابط العقار هنا" style="width:300px;">
+        <button type="submit">تحليل</button>
+    </form>
+    <pre id="result"></pre>
+    <script>
+        document.getElementById('analyzeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const url = document.getElementById('urlInput').value;
+            fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            });
+        });
+    </script>
+</body>
+</html>
